@@ -10,7 +10,7 @@ load_dotenv()
 
 def lambda_handler(event, context):
     # TODO implement
-    print("New Line added")
+    print("New Line is added")
     input_bucket = event['Records'][0]['s3']['bucket']['name']
     input_key  = event['Records'][0]['s3']['object']['key']
 
