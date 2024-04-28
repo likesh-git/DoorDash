@@ -19,4 +19,4 @@ phases:
       - aws s3 cp deployment_package.zip s3://doordashcodebuildbucket/
       - echo "Updating Lambda function via S3..."
       - aws lambda update-function-code --function-name DoorDashDelivery --s3-bucket doordashcodebuildbucket --s3-key deployment_package.zip
-      - echo "Deployment complete!"
+      - echo "Deployment completed!"
