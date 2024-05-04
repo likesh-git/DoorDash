@@ -6,11 +6,12 @@ from datetime import date
 import os
 from dotenv import load_dotenv
 
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 load_dotenv()
 
 def lambda_handler(event, context):
-    # TODO implement
-    print("New Line is added")
+
     input_bucket = event['Records'][0]['s3']['bucket']['name']
     input_key  = event['Records'][0]['s3']['object']['key']
 
@@ -18,7 +19,7 @@ def lambda_handler(event, context):
     obj = s3.get_object(Bucket = input_bucket, Key = input_key )
     body = obj['Body'].read()
     json_dicts = body.decode('utf-8').split('\r\n')
-    print('json_dicts - ', json_dicts)
+    logger.info('json_dicts - ', json_dicts)
     df = pd.DataFrame(columns = ['id','status','amount','date'])
     
     for line in json_dicts:
@@ -34,10 +35,10 @@ def lambda_handler(event, context):
     try:
         date_var = str(date.today())
         file_name = 'processed_data/{}_processed_data.csv'.format(date_var)
-        print('file_name -', file_name)
+        logger.info('file_name -', file_name)
     except:
         file_name = 'processed_data/processed_data.csv'
-        print('file_name -', file_name)
+        logger.info('file_name -', file_name)
 
     lambda_path = '/tmp/test.csv'
     bucket_name = os.getenv('output_bucket')
@@ -45,7 +46,7 @@ def lambda_handler(event, context):
     bucket = s3.Bucket(bucket_name)
     
     bucket.upload_file('/tmp/test.csv', file_name)
-    print('Uploaded')
+    logger.info('Uploaded')
 
     # sns to deliver file processed request
     sns = boto3.client('sns')
@@ -55,7 +56,7 @@ def lambda_handler(event, context):
     Message="File {} has been formatted and filtered. Its been stored in {} as {}".format(input_key,bucket_name,file_name)
     )
     
-    print('Published')
+    logger.info('Published')
 
     return {
         'statusCode': 200,
