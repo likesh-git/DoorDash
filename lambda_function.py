@@ -5,6 +5,7 @@ import io
 from datetime import date
 import os
 from dotenv import load_dotenv
+import logging 
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
