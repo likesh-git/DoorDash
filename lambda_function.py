@@ -20,7 +20,6 @@ def lambda_handler(event, context):
     obj = s3.get_object(Bucket = input_bucket, Key = input_key )
     body = obj['Body'].read()
     json_dicts = body.decode('utf-8').split('\r\n')
-    logger.info('json_dicts - ', json_dicts)
     df = pd.DataFrame(columns = ['id','status','amount','date'])
     
     for line in json_dicts:
@@ -36,10 +35,10 @@ def lambda_handler(event, context):
     try:
         date_var = str(date.today())
         file_name = 'processed_data/{}_processed_data.csv'.format(date_var)
-        logger.info('file_name -', file_name)
+        logger.info(f'file_name - {file_name}')
     except:
         file_name = 'processed_data/processed_data.csv'
-        logger.info('file_name -', file_name)
+        logger.info(f'file_name - {file_name}')
 
     lambda_path = '/tmp/test.csv'
     bucket_name = os.getenv('output_bucket')
