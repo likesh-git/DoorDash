@@ -28,35 +28,41 @@ def lambda_handler(event, context):
         if py_dict['status'] == 'delivered':
             df.loc[py_dict['id']] = py_dict
 
-    print('Converting to csv')
-    df.to_csv('/tmp/test.csv',sep = ',')
-    print('test.csv file created')
+    logger.info('Converting to csv')
+    df.to_csv('/tmp/intermediate.csv',sep = ',')
+    logger.info('intermediate.csv file created')
+
+    date_var = str(date.today())
+    file_name = 'processed_data/{}_processed_data.csv'.format(date_var)
+    logger.info(f'file_name - {file_name}')
 
     try:
-        date_var = str(date.today())
-        file_name = 'processed_data/{}_processed_data.csv'.format(date_var)
-        logger.info(f'file_name - {file_name}')
-    except:
-        file_name = 'processed_data/processed_data.csv'
-        logger.info(f'file_name - {file_name}')
+        lambda_path = '/tmp/intermediate.csv'
+        bucket_name = os.getenv('output_bucket')
+        s3 = boto3.resource('s3')
+        bucket = s3.Bucket(bucket_name)
 
-    lambda_path = '/tmp/test.csv'
-    bucket_name = os.getenv('output_bucket')
-    s3 = boto3.resource('s3')
-    bucket = s3.Bucket(bucket_name)
-    
-    bucket.upload_file('/tmp/test.csv', file_name)
-    logger.info('Uploaded')
+        bucket.upload_file('/tmp/intermediate.csv', file_name)
+        logger.info('Uploaded')
+    except Exception as e:
+        # sns to deliver file processed request
+        sns = boto3.client('sns')
+
+        response = sns.publish(
+        TopicArn=os.getenv('TopicArn'),
+        Message="File {} has been not been processed completely!".format(input_key)
+        )
+        logger.exception('An error occurred: %s', e)
+
 
     # sns to deliver file processed request
     sns = boto3.client('sns')
-    
     response = sns.publish(
     TopicArn=os.getenv('TopicArn'),
     Message="File {} has been formatted and filtered. Its been stored in {} as {}".format(input_key,bucket_name,file_name)
     )
-    
-    logger.info('Published')
+
+    logger.info('Sucess')
 
     return {
         'statusCode': 200,
